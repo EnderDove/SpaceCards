@@ -9,15 +9,16 @@ namespace Game
         public Bullet bullet;
         private ObjectPool<Bullet> bulletPool;
 
-        public Player attachedPlayer;
+        [HideInInspector] public Ship attachedShip;
+        public float shootTime = 0.1f;
 
-        [SerializeField] private float shootTime = 0.1f;
         private float shootTimer = 0;
 
-        private void OnBulletColision(Collision2D collision ,Bullet bullet)
+        private void Start()
         {
-            bulletPool.Release(bullet);
+            attachedShip = GetComponentInParent<Ship>();
         }
+
         public void Shoot(bool inp)
         {
             if (shootTimer > shootTime)
@@ -33,7 +34,6 @@ namespace Game
             {
                 shootTimer += Time.deltaTime;
             }
-            Debug.Log(bulletPool.CountAll);
         }
 
         #region Bullet Pool

@@ -1,41 +1,45 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Game
 {
-    public class Player : MonoBehaviour
+    public class Player : Ship
     {
+        [SerializeField] private float crosshairMaxDistance = 3f;
 
-        [HideInInspector] public Transform playerTransform;
-        [HideInInspector] public Rigidbody2D playerRigidbody;
-
-        private ShipInput attachedInputHandler;
-        private PlayerLocomotion attachedPlayerLocomotion;
-        private BulletLauncher[] bulletLaunchers;
+        [SerializeField] private Transform crosshairTransform;
         [SerializeField] private CameraHandler attachedCameraHandler;
+        [SerializeField] private GameObject dashCooldownSlider;
 
-        private void Start()
+        [SerializeField] private Image dashCooldownSliderFiller;
+        [SerializeField] private Image dashCooldownSliderBackground;
+        [SerializeField] private RectTransform dashCooldownSliderTransform;
+
+        protected override void StartAction()
         {
-            playerRigidbody = GetComponent<Rigidbody2D>();
-            playerTransform = GetComponent<Transform>();
-            attachedInputHandler = GetComponent<ShipInput>();
-            attachedPlayerLocomotion = GetComponent<PlayerLocomotion>();
-            bulletLaunchers = GetComponentsInChildren<BulletLauncher>();
-
-        }
-
-        private void Update()
-        {
-            attachedInputHandler.TickInput();
-            attachedPlayerLocomotion.HandlePlayerMovement(attachedInputHandler.MovementInput, attachedInputHandler.GazeLocationInput, playerTransform, playerRigidbody);
-            attachedPlayerLocomotion.HandleDash(attachedInputHandler.DashInput, attachedInputHandler.MovementInput, playerRigidbody);
-            foreach (BulletLauncher bulletLauncher in bulletLaunchers)
-                bulletLauncher.Shoot(attachedInputHandler.ShootInput);
+            #region DashSlider
+            GameObject sliderFiller = dashCooldownSlider.transform.GetChild(0).gameObject;
+            dashCooldownSliderBackground = dashCooldownSlider.GetComponent<Image>();
+            dashCooldownSliderFiller = sliderFiller.GetComponent<Image>();
+            dashCooldownSliderTransform = dashCooldownSlider.GetComponent<RectTransform>();
+            #endregion
         }
 
         private void FixedUpdate()
         {
-            attachedCameraHandler.Tick(this, attachedInputHandler.GazeLocationInput, Time.fixedDeltaTime);
+            attachedCameraHandler.Tick(this, crosshairTransform.position - shipTransform.position, Time.fixedDeltaTime);
+        }
 
+        protected override void PostTick()
+        {
+            Vector2 playerPos = attachedCameraHandler.mainCamera.WorldToScreenPoint(shipTransform.position);
+            crosshairTransform.position = Vector3.ClampMagnitude(shipInput.GazeLocationInput, crosshairMaxDistance) + shipTransform.position - Vector3.forward;
+
+            dashCooldownSliderFiller.fillAmount = dashTimer / DashTime;
+            dashCooldownSliderBackground.fillAmount = 1 - dashTimer / DashTime;
+
+            dashCooldownSliderTransform.position = playerPos;
+            dashCooldownSliderTransform.localScale = Vector3.one / attachedCameraHandler.ScaleFactor;
         }
     }
 }

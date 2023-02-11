@@ -22,9 +22,6 @@ namespace Game
         private float bulletFlightTime;
         private bool isLaunched = false;
 
-
-        private Action<Collision2D, Bullet> onCollisionEnterAction;
-
         #region ObjectPool
         private IObjectPool<Bullet> _pool;
         public void SetPool(IObjectPool<Bullet> _bulletPool) => _pool = _bulletPool;
@@ -44,13 +41,19 @@ namespace Game
             }
         }
 
-        public void Bullet—hangeParams(Color _bulletColor, float _bulletRadius, float _bulletLaunchSpeed, float _bulletDamage, Action<Collision2D, Bullet> _onCollisionEnterAction)
+        public void Bullet—hangeParams(Color _bulletColor, float _bulletRadius, float _bulletLaunchSpeed, float _bulletDamage)
         {
             bulletColor = _bulletColor;
             bulletRadius = _bulletRadius;
             bulletLaunchSpeed = _bulletLaunchSpeed;
             bulletDamage = _bulletDamage;
-            onCollisionEnterAction = _onCollisionEnterAction;
+        }
+
+        public virtual void OnCollisionEnterAction()
+        {
+            _pool.Release(this);
+            isLaunched = false;
+            bulletFlightTime = 0;
         }
 
         public void Launch()
@@ -62,7 +65,7 @@ namespace Game
 
             BulletSpriteRenderer.color = bulletColor;
             BulletParticleSystem.startColor = bulletColor;
-            BulletRigidbody.velocity = new Vector2((BulletLauncher.transform.up * bulletLaunchSpeed).x, (BulletLauncher.transform.up * bulletLaunchSpeed).y) + BulletLauncher.attachedPlayer.playerRigidbody.velocity;
+            BulletRigidbody.velocity = new Vector2((BulletLauncher.transform.up * bulletLaunchSpeed).x, (BulletLauncher.transform.up * bulletLaunchSpeed).y) + BulletLauncher.attachedShip.shipRigidbody.velocity;
 
             isLaunched = true;
         }
@@ -73,12 +76,10 @@ namespace Game
             {
                 return;
             }
+
             if (bulletFlightTime > 0)
             {
-                _pool.Release(this);
-                isLaunched = false;
-                bulletFlightTime = 0;
-                onCollisionEnterAction?.Invoke(collision, this);
+                OnCollisionEnterAction();
             }
         }
 

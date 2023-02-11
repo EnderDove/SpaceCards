@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+
 namespace Game
 {
     public class InputHandler : ShipInput
@@ -10,7 +11,6 @@ namespace Game
 
         [Header("Settings")]
         [SerializeField] private InputControlScheme controlScheme;
-        [SerializeField] private int CrosshairOffset = 3;
 
         private Vector2 crosshairInput;
 
@@ -35,8 +35,18 @@ namespace Game
         public override void TickInput()
         {
             HandleMouseBottonsInput();
-            CalculateCrosshairPosition();
+            CalculateGazeLocation();
             HandleDashInput();
+        }
+
+        public void OnControlSchemeChenged()
+        {
+            if (controlScheme == inputActions.KeyboardMouseScheme)
+                controlScheme = inputActions.GamepadScheme;
+            else
+            {
+                controlScheme = inputActions.KeyboardMouseScheme;
+            }
         }
 
         #region HandleInputs
@@ -51,18 +61,19 @@ namespace Game
             DashInput = inputActions.Actions.Dash.phase == InputActionPhase.Performed;
         }
 
-        private void CalculateCrosshairPosition()
+        private void CalculateGazeLocation()
         {
             if (controlScheme == inputActions.KeyboardMouseScheme)
             {
                 GazeLocationInput = Camera.main.ScreenToWorldPoint(crosshairInput);
                 GazeLocationInput -= new Vector3(0, 0, GazeLocationInput.z);
-                GazeLocationInput -= attachedPlayer.playerTransform.position;
-                if (GazeLocationInput.magnitude >= CrosshairOffset)
-                {
-                    GazeLocationInput /= GazeLocationInput.magnitude / CrosshairOffset;
-                }
-                GazeLocationInput = new Vector3(GazeLocationInput.x, GazeLocationInput.y, -1);
+                GazeLocationInput -= attachedPlayer.shipTransform.position;
+                GazeLocationInput = new Vector3(GazeLocationInput.x, GazeLocationInput.y, 0);
+            }
+
+            if (controlScheme == inputActions.GamepadScheme)
+            {
+
             }
         }
         #endregion
