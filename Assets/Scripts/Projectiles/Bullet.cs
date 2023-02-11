@@ -10,7 +10,7 @@ namespace Game
         public GameObject BulletObject;
         public Rigidbody2D BulletRigidbody;
         public BulletLauncher BulletLauncher;
-        public ParticleSystem BulletParticleSystem;
+        public TrailRenderer BulletTrail;
         public SpriteRenderer BulletSpriteRenderer;
 
         private Collision2D[] collisions;
@@ -25,6 +25,11 @@ namespace Game
         #region ObjectPool
         private IObjectPool<Bullet> _pool;
         public void SetPool(IObjectPool<Bullet> _bulletPool) => _pool = _bulletPool;
+
+        private void ReturnBullet()
+        {
+            _pool.Release(this);
+        }
         #endregion
 
         private void Update()
@@ -34,7 +39,7 @@ namespace Game
                 bulletFlightTime += Time.deltaTime;
                 if (bulletFlightTime >= 10f)
                 {
-                    _pool.Release(this);
+                    EndBulletLife();
                     isLaunched = false;
                     bulletFlightTime = 0;
                 }
@@ -49,11 +54,13 @@ namespace Game
             bulletDamage = _bulletDamage;
         }
 
-        public virtual void OnCollisionEnterAction()
+        public virtual void EndBulletLife()
         {
-            _pool.Release(this);
             isLaunched = false;
             bulletFlightTime = 0;
+            BulletRigidbody.simulated = false;
+            BulletSpriteRenderer.enabled = false;
+            Invoke(nameof(ReturnBullet), BulletTrail.time);
         }
 
         public void Launch()
@@ -64,7 +71,8 @@ namespace Game
             BulletObject.transform.localScale = Vector3.one * bulletRadius;
 
             BulletSpriteRenderer.color = bulletColor;
-            BulletParticleSystem.startColor = bulletColor;
+            BulletTrail.startColor = bulletColor;
+            BulletTrail.widthMultiplier = bulletRadius;
             BulletRigidbody.velocity = new Vector2((BulletLauncher.transform.up * bulletLaunchSpeed).x, (BulletLauncher.transform.up * bulletLaunchSpeed).y) + BulletLauncher.attachedShip.shipRigidbody.velocity;
 
             isLaunched = true;
@@ -79,7 +87,7 @@ namespace Game
 
             if (bulletFlightTime > 0)
             {
-                OnCollisionEnterAction();
+                EndBulletLife();
             }
         }
 

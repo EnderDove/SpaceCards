@@ -41,14 +41,13 @@ namespace Game
         {
             curentBullet.BulletSpriteRenderer.enabled = true;
             curentBullet.Launch();
-            curentBullet.BulletParticleSystem.enableEmission = true;
+            curentBullet.BulletTrail.emitting = true;
+            curentBullet.BulletTrail.Clear();
         }
 
         private void ReturnBulletToPool(Bullet curentBullet)
         {
-            curentBullet.BulletSpriteRenderer.enabled = false;
-            curentBullet.BulletParticleSystem.enableEmission = false;
-            curentBullet.BulletRigidbody.simulated = false;
+            curentBullet.BulletTrail.emitting = false;
         }
 
         private Bullet CreateBullet()
@@ -60,7 +59,7 @@ namespace Game
             curentBullet.BulletLauncher = this;
             curentBullet.BulletRigidbody = curentBullet.BulletObject.GetComponent<Rigidbody2D>();
             curentBullet.BulletSpriteRenderer = curentBullet.BulletObject.GetComponent<SpriteRenderer>();
-            curentBullet.BulletParticleSystem = curentBullet.BulletObject.GetComponent<ParticleSystem>();
+            curentBullet.BulletTrail = curentBullet.BulletObject.GetComponent<TrailRenderer>();
             curentBullet.ParentTransform = ParentForBullets;
 
             return curentBullet;
