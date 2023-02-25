@@ -1,45 +1,68 @@
+using System.Linq;
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Game
 {
     public class Player : Ship
     {
-        [SerializeField] private float crosshairMaxDistance = 3f;
+        [SerializeField] private Crosshair attachedCrosshair;
+        [SerializeField] private Transform cursor;
+        public CameraHandler attachedCameraHandler;
+        [SerializeField] private TextMeshProUGUI fpsText;
+        [SerializeField] private GameSliders dashCooldownSlider;
+        [SerializeField] private GameSliders blockCooldownSlider;
+        [SerializeField] private GameSliders healthSlider;
+        [SerializeField] private GameSliders bulletCountSlider;
 
-        [SerializeField] private Transform crosshairTransform;
-        [SerializeField] private CameraHandler attachedCameraHandler;
-        [SerializeField] private GameObject dashCooldownSlider;
-
-        [SerializeField] private Image dashCooldownSliderFiller;
-        [SerializeField] private Image dashCooldownSliderBackground;
-        [SerializeField] private RectTransform dashCooldownSliderTransform;
+        [SerializeField] private ParticleSystem[] trailsPartycleSystems;
+        private ParticleSystem.EmissionModule[] shipTrailEmissions;
+        private Vector2 lastSpeed;
+        private float[] fpsBuffer = new float[100];
 
         protected override void StartAction()
         {
-            #region DashSlider
-            GameObject sliderFiller = dashCooldownSlider.transform.GetChild(0).gameObject;
-            dashCooldownSliderBackground = dashCooldownSlider.GetComponent<Image>();
-            dashCooldownSliderFiller = sliderFiller.GetComponent<Image>();
-            dashCooldownSliderTransform = dashCooldownSlider.GetComponent<RectTransform>();
-            #endregion
+            Cursor.visible = false;
+            shipTrailEmissions = new ParticleSystem.EmissionModule[trailsPartycleSystems.Length];
+            for (int x = 0; x < trailsPartycleSystems.Length; x++)
+            {
+                shipTrailEmissions[x] = trailsPartycleSystems[x].emission;
+            }
         }
 
         private void FixedUpdate()
         {
-            attachedCameraHandler.Tick(this, crosshairTransform.position - shipTransform.position, Time.fixedDeltaTime);
+            float delta = Time.fixedDeltaTime;
+
+            attachedCameraHandler.Tick(this, attachedCrosshair.crosshairTransform.position - shipTransform.position, Time.fixedDeltaTime);
+            dashCooldownSlider?.Tick(this, CurrentDashCount, shipParameters.MaxDashCount, delta);
+            healthSlider?.Tick(this, HealthValue, shipParameters.MaxHealthValue, delta);
+            blockCooldownSlider?.Tick(this, blockReloadingTimer / shipParameters.BlockReloadTime, 1, delta);
+            bulletCountSlider?.Tick(this, CurrentBulletsCount, shipParameters.MaxBulletsCount, delta);
         }
 
-        protected override void PostTick()
+        protected override void PostTick(float delta)
         {
-            Vector2 playerPos = attachedCameraHandler.mainCamera.WorldToScreenPoint(shipTransform.position);
-            crosshairTransform.position = Vector3.ClampMagnitude(shipInput.GazeLocationInput, crosshairMaxDistance) + shipTransform.position - Vector3.forward;
+            attachedCrosshair.Tick(shipInput.GazeLocationInput, shipRigidbody, rotationAngle, shipParameters.SpeedFactor, IsBulletsOnReload, delta);
+            cursor.position = shipInput.GazeLocationInput + shipTransform.position;
 
-            dashCooldownSliderFiller.fillAmount = dashTimer / DashTime;
-            dashCooldownSliderBackground.fillAmount = 1 - dashTimer / DashTime;
+            for (int i = 0; i < shipTrailEmissions.Length; i++)
+            {
+                shipTrailEmissions[i].enabled = (shipRigidbody.velocity - lastSpeed).magnitude > 0;
+            }
+            lastSpeed = shipRigidbody.velocity;
+            fpsBuffer = fpsBuffer.Skip(fpsBuffer.Length - 1).Take(1).Concat(fpsBuffer.Take(fpsBuffer.Length - 1)).ToArray();
+            fpsBuffer[0] = 1 / delta;
+            fpsText.text = Mathf.Round(fpsBuffer.Sum() / 100).ToString();
+        }
 
-            dashCooldownSliderTransform.position = playerPos;
-            dashCooldownSliderTransform.localScale = Vector3.one / attachedCameraHandler.ScaleFactor;
+        private void OnDisable()
+        {
+            attachedCrosshair.gameObject.SetActive(false);
+            dashCooldownSlider.gameObject.SetActive(false);
+            blockCooldownSlider.gameObject.SetActive(false);
+            healthSlider.gameObject.SetActive(false);
+            bulletCountSlider.gameObject.SetActive(false);
         }
     }
 }

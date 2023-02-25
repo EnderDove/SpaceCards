@@ -71,9 +71,9 @@ namespace Game
                 GazeLocationInput = new Vector3(GazeLocationInput.x, GazeLocationInput.y, 0);
             }
 
-            if (controlScheme == inputActions.GamepadScheme)
+            else if (controlScheme == inputActions.GamepadScheme)
             {
-
+                GazeLocationInput = new Vector3(crosshairInput.x, crosshairInput.y, 0).normalized;
             }
         }
         #endregion
