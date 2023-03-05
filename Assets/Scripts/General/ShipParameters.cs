@@ -5,7 +5,6 @@ namespace Game
     public class ShipParameters : MonoBehaviour
     {
         [Header("Ship Movement")]
-        public float MaxHealthValue = 100f;
         public float SpeedFactor = 1f;
         public float AccelerationFactor = 1f;
 

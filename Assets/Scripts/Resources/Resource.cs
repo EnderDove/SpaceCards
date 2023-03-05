@@ -1,12 +1,16 @@
 using UnityEngine;
 
-[RequireComponent(typeof(Renderer))]
-public abstract class Resource : MonoBehaviour
+namespace Game
 {
-    public Sprite sprite;
-
-    private void OnEnable()
+    [RequireComponent(typeof(Renderer))]
+    public class Resource : MonoBehaviour
     {
-        GetComponent<Renderer>().material.mainTexture = sprite.texture;
+        public Sprite[] sprites = new Sprite[5];
+
+        private void Spawn(ResourceType resource, ResourceStone stone)
+        {
+            gameObject.SetActive(true);
+            GetComponent<Renderer>().material.mainTexture = sprites[(int)resource].texture;
+        }
     }
 }

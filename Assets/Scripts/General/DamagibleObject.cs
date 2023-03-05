@@ -4,31 +4,42 @@ namespace Game
 {
     [RequireComponent(typeof(Rigidbody2D))]
     [RequireComponent(typeof(Collider2D))]
-    public abstract class DamagibleObject : MonoBehaviour
+    public class DamagibleObject : MonoBehaviour
     {
-        public float HealthValue { get; protected set; }
+        private float healthValue;
+        [SerializeField] protected float maxHealthValue = 100;
 
-        [SerializeField] private ParticleSystem DeathParticles;
+        public float HealthValue => healthValue;
+        public float MaxHealthValue => maxHealthValue;
+
+        [SerializeField] private GameObject Explosion;
+        private GameObject explosionInstance;
+
+        private void OnEnable()
+        {
+            healthValue = maxHealthValue;
+        }
 
         public virtual void ApplyDamage(float damage)
         {
             if (damage < 0) { throw new System.IndexOutOfRangeException(); }
-            HealthValue -= damage;
-            if (HealthValue <= 0) { OnHealthEnd(); }
+            healthValue -= damage;
+            if (healthValue <= 0) { OnHealthEnd(); }
         }
 
         protected virtual void OnHealthEnd()
         {
-            DeathParticles.gameObject.SetActive(true);
-            DeathParticles.transform.parent = null;
-            DeathParticles.Play();
+            explosionInstance = Instantiate(Explosion, null);
+            explosionInstance.transform.position = transform.position;
+            explosionInstance.SetActive(true);
+            explosionInstance.GetComponent<ParticleSystem>().Play();
             gameObject.SetActive(false);
             Invoke(nameof(DeleteObject), 2);
         }
 
         protected virtual void DeleteObject()
         {
-            Destroy(DeathParticles.gameObject);
+            Destroy(explosionInstance);
             Destroy(gameObject);
         }
     }

@@ -79,6 +79,7 @@ namespace Game
             BulletTrail.material.color = bulletColor;
             burstParticleSystem.startColor = bulletColor;
             BulletTrail.widthMultiplier = bulletRadius;
+
             Vector2 velocity = new Vector2((BulletLauncher.transform.up * bulletLaunchSpeed).x, (BulletLauncher.transform.up * bulletLaunchSpeed).y) + BulletLauncher.attachedShip.shipRigidbody.velocity / 2;
             velocity += Random.Range(-1f, 1f) * spreedValue * BulletLauncher.attachedShip.shipRigidbody.velocity / BulletLauncher.attachedShip.shipParameters.SpeedFactor * new Vector2(BulletLauncher.attachedShip.shipTransform.right.x, BulletLauncher.attachedShip.shipTransform.right.y);
 
@@ -100,23 +101,21 @@ namespace Game
 
             collisions.Add(collision);
 
-            if (collision.gameObject.CompareTag("Ship"))
+            if (bulletFlightTime > 0.1f)
             {
-                if (bulletFlightTime > 0.1f)
+                if (collision.gameObject.TryGetComponent(out DamagibleObject gameObj))
                 {
-                    if (collision.gameObject.TryGetComponent(out DamagibleObject gameObj))
-                    {
-                        gameObj.ApplyDamage(bulletDamage);
-                    }
-                    burstParticleSystem.Play();
-                    EndBulletLife();
+                    gameObj.ApplyDamage(bulletDamage);
                 }
-            }
-            else
-            {
                 burstParticleSystem.Play();
                 EndBulletLife();
             }
+            else
+            {
+                return;
+            }
+            burstParticleSystem.Play();
+            EndBulletLife();
         }
 
     }

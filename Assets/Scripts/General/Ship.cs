@@ -37,7 +37,8 @@ namespace Game
         [HideInInspector] public float bulletsReloadingTimer = 0;
         [HideInInspector] public float bulletRegenCooldownTimer = 0;
 
-        protected float rotationAngle;
+        private float rotationAngle;
+        public float RotationAngle => rotationAngle;
 
         private void Start()
         {
@@ -49,7 +50,6 @@ namespace Game
             HasBulletLaunchers = (bulletLaunchers.Length > 0);
 
             shipParameters = GetComponent<ShipParameters>();
-            HealthValue = shipParameters.MaxHealthValue;
             CurrentBulletsCount = shipParameters.MaxBulletsCount;
             CurrentDashCount = shipParameters.MaxDashCount;
             StartAction();
